@@ -8,6 +8,7 @@ use App\Http\Resources\PostResource;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Intervention\Image\ImageManagerStatic as Image;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class PostController extends Controller
 {
@@ -18,9 +19,11 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = Post::get();
+        $posts = QueryBuilder::for(Post::class)
+            ->allowedIncludes(['comments'])
+            ->get();
 
-        return PostResource::collection($posts);
+        return PostGetResource::collection($posts);
     }
 
     /**
@@ -63,12 +66,10 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
-        // dd($post->picture);
-        $file = storage_path($post->picture);
-        if (file_exists($file)) {
-            $post->base64image = base64_encode(file_get_contents($file));
-        }
-
+        $post = QueryBuilder::for(Post::class)
+            ->allowedIncludes(['comments'])
+            ->find($post->id);
+            
         return new PostGetResource($post);
     }
 
