@@ -7,8 +7,11 @@ use App\Http\Resources\PostGetResource;
 use App\Http\Resources\PostResource;
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Intervention\Image\ImageManagerStatic as Image;
 use Spatie\QueryBuilder\QueryBuilder;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 
 class PostController extends Controller
 {
@@ -44,14 +47,16 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        $file = $request->file('picture');
-        $fileName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        $currentId = DB::table('posts')->max('id') + 1;
 
-        $imagePath = 'app\picture\\' . $fileName . '.jpg';
-        Image::make($file)->save(storage_path($imagePath));
+        $picture = $request->file('picture');
+        $imagePathAndName = 'post_images/'. $currentId . '.' . $picture->getClientOriginalExtension();
+        Storage::disk('local')->put($imagePathAndName, $request->file('picture')->get());
+
+        // $imagePathAndName = storage_path() . '/app/post_images/'. $currentId . '.' . $picture->getClientOriginalExtension();
 
         $post = Post::create([
-            'picture' => $imagePath,
+            'picture' => $imagePathAndName,
             'caption' => $request->caption,
         ]);
 
