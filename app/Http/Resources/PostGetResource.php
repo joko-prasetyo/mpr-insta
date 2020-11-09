@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class PostGetResource extends JsonResource
 {
@@ -17,9 +18,11 @@ class PostGetResource extends JsonResource
         return [
             'id' => $this->id,
             'picture' => $this->when(true, function () {
-                $file = storage_path($this->picture);
-                if (file_exists($file)) {
-                    return base64_encode(file_get_contents($file));
+
+                $contents = Storage::disk('local')->get($this->picture);
+                
+                if ($contents) {
+                    return base64_encode($contents);
                 }
                 return '';
             }),
